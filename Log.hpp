@@ -1,10 +1,14 @@
+#ifndef log_h
+#define log_h
+
+
 #include <ostream>
 #include <fstream>
 #include <string>
 
 enum Priority {OFF, DEGUB, INFO, WARNING, ERROR};
 
-// Logger standard interface
+// Logger interface
 class Logger {
 public:
     virtual void log(std::string& msg) = 0;
@@ -18,15 +22,11 @@ class FileLogger: Logger {};
 // Pretty log on console
 class ConsoleLogger: Logger {};
 
-// Concrete interface composed of loggers
-// as stream to multiple outputs.
+// Stream interface to aggregate multiple Loggers
 class Log: ostream {
     private:
         Logger& file_logger;
         Logger& console_logger;
-
-        bool active;
-        Priority level;
 
     public:
         Log (Logger& console_logger, Logger& file_logger): 
