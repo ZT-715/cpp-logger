@@ -1,0 +1,38 @@
+  name: CPPCheck-annotations
+  # You may pin to the exact commit or the version.
+  # uses: tonybaloney/cppcheck-action@0b7beeee834665251e17265258dc6e064c91d302
+  uses: tonybaloney/cppcheck-action@1.0
+  with:
+    # Project Directory
+    path: # optional, default is .
+    # Reporting level (cppcheck --include=<level>
+    level: # optional, default is warning
+    # Any additional cppcheck flags or options
+    opts: # optional, default is 
+          
+          
+          
+
+name: C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: configure
+      run: ./configure
+    - name: make
+      run: make
+    - name: make check # Runs tests
+      run: make check
+    - name: make doxygen # Composes doxygen documentation
+      run: make doxygen
