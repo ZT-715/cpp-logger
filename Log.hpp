@@ -6,8 +6,8 @@
 #include <fstream>
 #include <string>
 
-/* @Brief
- * Possible logging levels, DEBUG is default.
+/* @enum Severity
+ * @Brief Possible logging levels, DEBUG is default.
  *
  * @todo
  * Remove Severity to another header.
@@ -15,8 +15,7 @@
 enum Severity {OFF, DEGUB, INFO, WARNING, ERROR};
 
 
-/* @Brief
- * Converts enum to text on output streams.
+/* @Brief Converts enum to text on output streams.
  */
 std::ostream& operator<<(std::ostream& os, const Severity& level) {
     switch(level) {
@@ -42,8 +41,8 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     return os;
 }
 
-/* @Brief
- * Abstract logger interface.
+/* @class Logger
+ * @Brief Abstract logger interface.
  */
 class Logger {
 public:
@@ -51,13 +50,13 @@ public:
     virtual void set_logging_level(Severity) = 0;
 };
 
-/* @Brief
- * Logger that manages file creation and uptdate.
+/* @class FileLogger
+ * @Brief Logger that manages file creation and uptdate.
  */
 class FileLogger: Logger {};
 
-/* @Brief
- * Logger that manages console output streams.
+/* @class ConsoleLogger
+ * @Brief Logger that manages console output streams.
  */
 class ConsoleLogger: Logger {
     Severity logging_level;
@@ -83,8 +82,8 @@ public:
     }
 };
 
-/* @Brief
- * Stream interface to aggregate multiple Loggers.
+/* @class Log
+ * @Brief Stream interface to aggregate multiple Loggers.
  *
  * @todo
  * Implement stream to multiple Loggers
