@@ -8,6 +8,29 @@
 
 enum Severity {OFF, DEGUB, INFO, WARNING, ERROR};
 
+std::ostream& operator<<(std::ostream& os, const Severity& level) {
+    switch(level) {
+        case OFF: 
+            os << "OFF";
+            break;
+        case DEBUG: 
+            os << "DEBUG";
+            break;
+        case INFO:
+            os << "INFO";
+            break;
+        case WARNING:
+            os << "WARNING";
+            break;
+        case ERROR:
+            os << "ERROR";
+            break;
+        default: 
+            os << " ";
+            break;
+    }
+    return os;
+}
 
 // Logger interface
 class Logger {
