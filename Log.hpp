@@ -6,16 +6,16 @@
 #include <fstream>
 #include <string>
 
-/* @enum Severity
- * @Brief Possible logging levels, DEBUG is default.
+/** @enum Severity
+ *  @brief Possible logging levels, DEBUG is default.
  *
- * @todo
- * Remove Severity to another header.
+ *  @todo
+ *  Remove Severity to another header.
  */
-enum Severity {OFF, DEGUB, INFO, WARNING, ERROR};
+enum Severity {OFF, DEBUB, INFO, WARNING, ERROR};
 
 
-/* @Brief Converts enum to text on output streams.
+/** @brief Converts enum to text on output streams.
  */
 std::ostream& operator<<(std::ostream& os, const Severity& level) {
     switch(level) {
@@ -41,8 +41,8 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     return os;
 }
 
-/* @class Logger
- * @Brief Abstract logger interface.
+/** @class Logger
+ *  @brief Abstract logger interface.
  */
 class Logger {
 public:
@@ -50,13 +50,13 @@ public:
     virtual void set_logging_level(Severity) = 0;
 };
 
-/* @class FileLogger
- * @Brief Logger that manages file creation and uptdate.
+/** @class FileLogger
+ *  @brief Logger that manages file creation and uptdate.
  */
 class FileLogger: Logger {};
 
-/* @class ConsoleLogger
- * @Brief Logger that manages console output streams.
+/** @class ConsoleLogger
+ *  @brief Logger that manages console output streams.
  */
 class ConsoleLogger: Logger {
     Severity logging_level;
@@ -82,13 +82,13 @@ public:
     }
 };
 
-/* @class Log
- * @Brief Stream interface to aggregate multiple Loggers.
+/** @class Log
+ *  @brief Stream interface to aggregate multiple Loggers.
  *
- * @todo
- * Implement stream to multiple Loggers
- * Add __LINE__ and __FILE__ inline
- * Add time to output
+ *  @todo
+ *  Implement stream to multiple Loggers
+ *  Add __LINE__ and __FILE__ inline
+ *  Add time to output
  */
 class Log: ostream {
     private:
