@@ -1,8 +1,7 @@
-#ifndef log_h
-#define log_h
+#ifndef LOG_H
+#define LOG_H
 
-
-#include <ostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -12,7 +11,7 @@
  *  @todo
  *  Remove Severity to another header.
  */
-enum Severity {OFF, DEBUB, INFO, WARNING, ERROR};
+enum Severity {OFF, DEBUG, INFO, WARNING, ERROR};
 
 
 /** @brief Converts enum to text on output streams.
@@ -46,39 +45,64 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
  */
 class Logger {
 public:
-    virtual void log(std::string& msg) = 0;
+    virtual inline void log(std::string& msg) = 0;
     virtual void set_logging_level(Severity) = 0;
 };
 
 /** @class FileLogger
  *  @brief Logger that manages file creation and uptdate.
  */
-class FileLogger: Logger {};
+class FileLogger: Logger {
+private:
+    Severity logging_level;
+    std::string output_filename;
+    std::ofstream output_file;
+
+public: 
+    FileLogger(std::string output_filename="./log.txt", Severity logging_level=DEBUG): 
+        output_filename{output_filename}, logging_level(logging_level) {
+            output_file.open(output_filename, std::ios::app);
+        if(!output_file)
+            throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
+    }
+    
+    inline void log(std::string& msg, Severity msg_severity) {
+        if(msg_severity <= logging_level)
+            return;
+        output_file << msg << std::endl;
+    }
+
+    void set_logging_level(Severity new_logging_level) {
+        logging_level = new_logging_level;
+    }
+    
+    ~FileLogger() {
+        output_file.close(); 
+    }
+};
 
 /** @class ConsoleLogger
  *  @brief Logger that manages console output streams.
+ *  
+ *  Ideally, \p output_stream is cerr which is unbuffered.
  */
 class ConsoleLogger: Logger {
     Severity logging_level;
     std::ostream& output_stream;
    
 public:
-    ConsoleLogger(std::ostream& output, Severity logging_level=DEBUG): output_stream(output),
-                                                                  logging_level(logging_level) {
-        if (logging_level != OFF)
-            output_stream << "Start ConsoleLogger on " << logging_level <<  "." << std::endl;
+    ConsoleLogger(std::ostream& output=std::cerr, Severity logging_level=DEBUG):
+        output_stream(output), logging_level(logging_level) {
     }
     
-    void log(std::string msg, Severity msg_severity) override {
-        if(msg_severity => logging_level)
-            output_stream << msg << std::endl;
+    inline void log(std::string& msg, Severity msg_severity)  {
+        if(msg_severity <= logging_level)
+            return;
+        output_stream << msg << std::endl;
     }
 
-    void set_logging_level(Severity new_logging_level) override {
+    void set_logging_level(Severity new_logging_level) {
         logging_level = new_logging_level;
-     
-        if (logging_level != OFF)
-            output_stream << "Set logging level on " << logging_level << "." << std::endl;
     }
 };
 
@@ -90,7 +114,7 @@ public:
  *  Add __LINE__ and __FILE__ inline
  *  Add time to output
  */
-class Log: ostream {
+class Log: std::ostream {
     private:
         Logger& file;
         Logger& console;
@@ -101,3 +125,6 @@ class Log: ostream {
 
         void set_logging_level(Severity);
 };
+
+#endif
+
