@@ -2,13 +2,13 @@
 CXX = g++
 
 # Compiler flags
-CXXFLAGS = -g
+CXXFLAGS = -g -Wall
 
 # Linker flags
 LDFLAGS = -lbfd -ldl
 
 # Source files
-SRCS = main.cpp ./backward-cpp/backward.cpp
+SRCS = main.cpp Log.cpp ./backward-cpp/backward.cpp
 
 # Output executable
 TARGET = main
