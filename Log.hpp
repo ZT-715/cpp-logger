@@ -14,71 +14,40 @@
 enum Severity {OFF, DEBUG, INFO, WARNING, ERROR};
 
 
+
 /** @brief Converts enum to text on output streams.
  */
-std::ostream& operator<<(std::ostream& os, const Severity& level) {
-    switch(level) {
-        case OFF: 
-            os << "OFF";
-            break;
-        case DEBUG: 
-            os << "DEBUG";
-            break;
-        case INFO:
-            os << "INFO";
-            break;
-        case WARNING:
-            os << "WARNING";
-            break;
-        case ERROR:
-            os << "ERROR";
-            break;
-        default: 
-            os << " ";
-            break;
-    }
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, const Severity& level);
 
 /** @class Logger
  *  @brief Abstract logger interface.
  */
 class Logger {
 public:
-    virtual inline void log(std::string& msg) = 0;
-    virtual void set_logging_level(Severity) = 0;
+    virtual void log(std::string msg, Severity msg_severity=DEBUG) = 0;
+    virtual void set_logging_level(Severity new_logging_level) = 0;
+    virtual ~Logger() {};
 };
 
 /** @class FileLogger
  *  @brief Logger that manages file creation and uptdate.
  */
-class FileLogger: Logger {
+class FileLogger: public Logger {
 private:
     Severity logging_level;
     std::string output_filename;
     std::ofstream output_file;
 
 public: 
-    FileLogger(std::string output_filename="./log.txt", Severity logging_level=DEBUG): 
-        output_filename{output_filename}, logging_level(logging_level) {
-            output_file.open(output_filename, std::ios::app);
+    FileLogger(std::string output_filename="./log.txt", Severity logging_level=DEBUG):
+        output_filename(output_filename), logging_level(logging_level) {
+        output_file.open(output_filename, std::ios::app);
         if(!output_file)
-            throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
-    }
-    
-    inline void log(std::string& msg, Severity msg_severity) {
-        if(msg_severity <= logging_level)
-            return;
-        output_file << msg << std::endl;
-    }
-
-    void set_logging_level(Severity new_logging_level) {
-        logging_level = new_logging_level;
-    }
-    
-    ~FileLogger() {
-        output_file.close(); 
-    }
+           throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
+    } 
+    void log(std::string msg, Severity msg_severity=DEBUG);
+    void set_logging_level(Severity new_logging_level);     
+    ~FileLogger(); 
 };
 
 /** @class ConsoleLogger
@@ -86,24 +55,19 @@ public:
  *  
  *  Ideally, \p output_stream is cerr which is unbuffered.
  */
-class ConsoleLogger: Logger {
+class ConsoleLogger: public Logger {
     Severity logging_level;
     std::ostream& output_stream;
    
 public:
     ConsoleLogger(std::ostream& output=std::cerr, Severity logging_level=DEBUG):
-        output_stream(output), logging_level(logging_level) {
-    }
+        output_stream(output), logging_level(logging_level) {};
     
-    inline void log(std::string& msg, Severity msg_severity)  {
-        if(msg_severity <= logging_level)
-            return;
-        output_stream << msg << std::endl;
-    }
+    void log(std::string msg, Severity msg_severity=DEBUG); 
 
-    void set_logging_level(Severity new_logging_level) {
-        logging_level = new_logging_level;
-    }
+    void set_logging_level(Severity new_logging_level);
+
+    ~ConsoleLogger() {}
 };
 
 /** @class Log
@@ -114,14 +78,14 @@ public:
  *  Add __LINE__ and __FILE__ inline
  *  Add time to output
  */
-class Log: std::ostream {
+class Log: public std::ostream {
     private:
         Logger& file;
         Logger& console;
 
     public:
         Log (Logger& console_logger, Logger& file_logger): 
-            console(console_logger), file(file_logger) {}
+            console(console_logger), file(file_logger) {} 
 
         void set_logging_level(Severity);
 };
