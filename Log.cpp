@@ -53,9 +53,23 @@ void signal_handler(int signal) {
     std::exit(signal);
 }
 
+FileLogger::FileLogger(const std::string output_filename, Severity logging_level):
+    output_filename(output_filename), logging_level(logging_level) {
+   
+    output_file.open(output_filename, std::ios::app);
+    if(!output_file)
+       throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
+}
+
 void FileLogger::log(const std::string msg, Severity msg_severity) {
     if(logging_level != OFF && msg_severity >= logging_level)
         output_file << msg << std::endl;
+}
+
+int FileLogger::log_c(char c, Severity msg_severity) {
+    if(logging_level != OFF && msg_severity >= logging_level)
+        output_file << c;
+    return 0;
 }
 
 void FileLogger::set_logging_level(Severity new_logging_level){
@@ -69,7 +83,11 @@ void ConsoleLogger::log(const std::string msg, Severity msg_severity)  {
     if(logging_level != OFF && msg_severity >= logging_level)
         output_stream << msg << std::endl;
 }
-
+int ConsoleLogger::log_c(char c, Severity msg_severity) {
+    if(logging_level != OFF && msg_severity >= logging_level)
+        output_stream << c;
+    return 0;
+}
 void ConsoleLogger::set_logging_level(Severity new_logging_level) {
     logging_level = new_logging_level;
 
@@ -98,8 +116,32 @@ void Log::log(const std::string msg, Severity logging_level) {
     return;
 }
 
+void Log::setup_signal_handling() {
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    // Save the old handlers and set the new ones                                                                                          
+    sigaction(SIGSEGV, &sa, &old_sigsegv_handler);
+    sigaction(SIGABRT, &sa, &old_sigabrt_handler);
+    sigaction(SIGFPE, &sa, &old_sigfpe_handler);
+}
+
+void Log::restore_signal_handling() {
+    // Restore the old handler
+    sigaction(SIGSEGV, &old_sigsegv_handler, nullptr);
+    sigaction(SIGABRT, &old_sigabrt_handler, nullptr);
+    sigaction(SIGFPE, &old_sigfpe_handler, nullptr);
+}
+
+int Log::overflow(int c) {                                                                                              
+    file.log_c(c);
+    console.log_c(c);
+    return 0;
+}
+
 Log::~Log() {
     this->restore_signal_handling();
-//    std::cerr.rdbuf(original_cerr);
+    std::cerr.rdbuf(original_cerr);
     // std::cout.rdbuff(original_cout);
 }

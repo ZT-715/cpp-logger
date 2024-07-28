@@ -49,16 +49,7 @@ void test_backward(){
    
     
     try {
-        // Simulate a core dump (division by zero)
-        volatile int a = 1;
-        int b = --a;
-        int result = a + b; // This will cause a division by zero error
-                            // which is caught by a sig handler
-        std::cerr << "Result: " << result << std::endl;
-        
         throw std::invalid_argument("TEST backtrace"); // this is handled 
-                                                       // by the catch
-
     } catch (std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
          
@@ -75,6 +66,14 @@ void test_backward(){
         std::cerr << "st: ";
         p.print(st,std::cerr); // print stack trace
     }
+
+        // Simulate a core dump (division by zero)
+        volatile int a = 1;
+        int b = --a;
+        int result = a + b; // This will cause a division by zero error
+                            // which is caught by a sig handler
+        std::cerr << "Result: " << result << std::endl;
+ 
 }
 
 
@@ -94,7 +93,9 @@ int main(void) {
 
 
     Log log{log_console, log_file};    
-    log << "ostream" << std::endl;
+    log << "MAIN: " << std::endl;
+    std::cerr << "cerr" << std::endl;
+
 
    // stacktrace();
 
