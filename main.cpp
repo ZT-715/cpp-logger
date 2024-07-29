@@ -20,20 +20,18 @@ void test_log(){
     log_ref.set_logging_level(Severity::OFF);
 
     log_ref.log("Mensagem que não aparece.", Severity::ERROR);
-    log_ref.log("Mensagem que aparece.", Severity::OFF);
+    log_ref.log("Mensagem que não aparece.", Severity::OFF);
 
     log_ref.set_logging_level(Severity::DEBUG);
+
+    log_ref.log("Mensagem que aparece.", Severity::ERROR);
     try{
         throw logged_exception("TEST", log_ref);
     }
     catch(const std::exception& e){
         std::cout << "catch: " << e.what() << std::endl;
     }
-
-    Log log{log_console, log_file};    
-    log << "ostream" << std::endl;
-    
-    stacktrace();
+ 
     return;
 }
 
@@ -46,34 +44,19 @@ void test_backward(){
     p.address = true;
     p.snippet = true;
 
-   
-    
-    try {
-        throw std::invalid_argument("TEST backtrace"); // this is handled 
-    } catch (std::exception& e) {
-        std::cerr << "Exception caught: " << e.what() << std::endl;
-         
-        st.load_here(32); // capture stack trace
-                          // Problem: load_here() includes itself
-                          // and the catch handle.
-                          //
-                          // Must use macro to generate trace on 
-                          // throw statement.
-    
-        backward::TraceResolver tr;
-        tr.load_stacktrace(st);
-    
-        std::cerr << "st: ";
-        p.print(st,std::cerr); // print stack trace
-    }
+     
+    st.load_here(32); // capture stack trace
+                      // Problem: load_here() includes itself
+                      // and the catch handle.
+                      //
+                      // Must use macro to generate trace on 
+                      // throw statement.
 
-        // Simulate a core dump (division by zero)
-        volatile int a = 1;
-        int b = --a;
-        int result = a + b; // This will cause a division by zero error
-                            // which is caught by a sig handler
-        std::cerr << "Result: " << result << std::endl;
- 
+    backward::TraceResolver tr;
+    tr.load_stacktrace(st);
+
+    std::cerr << "st: ";
+    p.print(st,std::cerr); // print stack trace
 }
 
 
@@ -91,17 +74,16 @@ int main(void) {
 
     log_file.log("Iniciando FileLogger default.");
 
+    setup_signal_handling(log_file);
 
-    Log log{log_console, log_file};    
-    log << "MAIN: " << std::endl;
-    std::cerr << "cerr" << std::endl;
+    // Simulate a core dump (division by zero)
+    volatile int a = 1;
+    int b = --a;
+    int result = a / b; // This will cause a division by zero error
+                        // which is caught by a sig handler
+    std::cerr << "Result: " << result << std::endl;
 
-
-   // stacktrace();
-
-    //log.setup_signal_handling();
-
-    test_backward();
+// test_backward();
 
     std::cerr << "FI\n";
     return 1;

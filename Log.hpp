@@ -30,12 +30,7 @@ std::ostream& operator<<(std::ostream& os, const Severity& level);
  *  @todo
  *  Make it produce a string w/ the trace instead of accessign a global stream.
  */
-void stacktrace();
-
-/** @function signal_handler()
- *  @brief Configures log for system signals
- */
-void signal_handler(int);
+std::string stacktrace();
 
 /** @class Logger
  *  @brief Abstract logger interface.
@@ -45,7 +40,6 @@ class Logger {
 public:
     virtual void log(const std::string  msg, Severity msg_severity=DEBUG) = 0;
     virtual void set_logging_level(Severity new_logging_level) = 0;
-    virtual int log_c(char c, Severity msg_severity=DEBUG) = 0;
     virtual ~Logger() {};
 };
 
@@ -58,9 +52,6 @@ private:
     std::string output_filename;
     Severity logging_level;
     std::ofstream output_file;
-
-protected:
-    int log_c(char c, Severity msg_severity=DEBUG);
 
 public: 
     FileLogger(const std::string output_filename="./log.txt", Severity logging_level=DEBUG);
@@ -80,51 +71,13 @@ private:
     std::ostream& output_stream;
     Severity logging_level;
 
-protected:
-    int log_c(char c, Severity msg_severity=DEBUG);
-
 public:
     ConsoleLogger(std::ostream& output=std::cerr, Severity logging_level=DEBUG):
         output_stream(output), logging_level(logging_level) {};
     void log(const std::string msg, Severity msg_severity=DEBUG); 
     void set_logging_level(Severity new_logging_level);
-    ~ConsoleLogger() {}
+    ~ConsoleLogger();
 };
-
-/** @class Log
- *  @brief Stream interface to aggregate multiple Loggers.
- *
- *  @todo
- *  Implement stream to multiple Loggers
- *  Add time to output
- *  Place Loggers instances to <vector>
- *  Place sigaction instances on <map>
- */
-class Log: public std::ostream,
-           private std::streambuf  {
-    
-    private:
-        Logger& console;
-        Logger& file;
-        std::streambuf* original_cout;
-        std::streambuf* original_cerr;
-        struct sigaction old_sigsegv_handler;
-        struct sigaction old_sigabrt_handler;
-        struct sigaction old_sigfpe_handler;
-
-    protected:
-        void setup_signal_handling(); 
-        void restore_signal_handling();
-        int overflow(int c) override; 
-
-    public:
-        Log (Logger& console_logger, Logger& file_logger);       
-        void log(const std::string msg, Severity logging_level=DEBUG); 
-        void set_logging_level(Severity);
-        ~Log();
-
-};
-
 class fatal_logged_exception: public std::exception {
     const std::string msg;
     const Logger& logger;
@@ -135,6 +88,14 @@ class fatal_logged_exception: public std::exception {
 
         ~fatal_logged_exception() {};
 };   
+
+void setup_signal_handling(Logger&); 
+void restore_signal_handling();
+/** @function signal_handler()
+ *  @brief Configures log for system signals
+ */
+void signal_handler(int);
+
 
 #endif
 

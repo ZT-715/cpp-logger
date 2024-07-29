@@ -1,5 +1,7 @@
 #include"Log.hpp"
 
+Logger* signal_logger;
+
 std::ostream& operator<<(std::ostream& os, const Severity& level) {
     switch(level) {
         case OFF:
@@ -24,16 +26,18 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     return os;
 }
 
-void stacktrace() {
+std::string stacktrace() {
     backward::StackTrace st;
     backward::Printer p;
+
+    std::stringstream ss;
 
     p.object = true;
     p.color_mode = backward::ColorMode::always;
     p.address = true;
     p.snippet = true;
 
-    std::cerr << "Stack trace: \n";
+    ss << "Stack trace: \n";
 
     // Todo:
     // load_here() includes itself on the trace,
@@ -42,13 +46,15 @@ void stacktrace() {
     st.load_here(32);
     backward::TraceResolver tr;
     tr.load_stacktrace(st);
-    p.print(st, std::cerr);
+    p.print(st, ss);
+
+    return ss.str();
 }
 
 void signal_handler(int signal) {
-    std::cerr << "Signal handler: " << strsignal(signal) << ":\n";
-
-    stacktrace();
+    std::stringstream ss;
+    ss <<  "Signal handler: " << strsignal(signal) << ":\n" << stacktrace();
+    signal_logger->log(ss.str());
 
     std::exit(signal);
 }
@@ -66,31 +72,25 @@ void FileLogger::log(const std::string msg, Severity msg_severity) {
         output_file << msg << std::endl;
 }
 
-int FileLogger::log_c(char c, Severity msg_severity) {
-    if(logging_level != OFF && msg_severity >= logging_level)
-        output_file << c;
-    return 0;
-}
 
 void FileLogger::set_logging_level(Severity new_logging_level){
     logging_level = new_logging_level;
 }
 
 FileLogger::~FileLogger() {
+    this->log(stacktrace());
     output_file.close(); 
 }
 void ConsoleLogger::log(const std::string msg, Severity msg_severity)  {
     if(logging_level != OFF && msg_severity >= logging_level)
         output_stream << msg << std::endl;
 }
-int ConsoleLogger::log_c(char c, Severity msg_severity) {
-    if(logging_level != OFF && msg_severity >= logging_level)
-        output_stream << c;
-    return 0;
-}
+
 void ConsoleLogger::set_logging_level(Severity new_logging_level) {
     logging_level = new_logging_level;
 
+}
+ConsoleLogger::~ConsoleLogger() {
 }
 
 fatal_logged_exception::fatal_logged_exception(const std::string msg, Logger& logger): msg{"fatal_logged_exception: " + msg}, logger{logger} {
@@ -101,47 +101,25 @@ const char* fatal_logged_exception::what() const noexcept {
     return msg.c_str();
 }
 
-Log::Log(Logger& console_logger, Logger& file_logger):
-    std::ostream(this), console(console_logger),
-    file(file_logger) {
-        setup_signal_handling();
-        // original_cout = std::cout.rdbuf(this);
-        original_cerr = std::cerr.rdbuf(this);
+void setup_signal_handling(Logger& out) {
+
+    signal_logger = &out;
+
+    std::signal(SIGTERM,signal_handler );
+    std::signal(SIGINT,signal_handler);
+    std::signal(SIGFPE,signal_handler );
+    std::signal(SIGABRT,signal_handler );
+    std::signal(SIGSEGV,signal_handler );
 }
 
-void Log::log(const std::string msg, Severity logging_level) {
-    console.log(msg, logging_level);
-    file.log(msg, logging_level);
-    
-    return;
-}
-
-void Log::setup_signal_handling() {
-    struct sigaction sa;
-    sa.sa_handler = signal_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    // Save the old handlers and set the new ones                                                                                          
-    sigaction(SIGSEGV, &sa, &old_sigsegv_handler);
-    sigaction(SIGABRT, &sa, &old_sigabrt_handler);
-    sigaction(SIGFPE, &sa, &old_sigfpe_handler);
-}
-
-void Log::restore_signal_handling() {
+void restore_signal_handling() {
+    signal_logger = nullptr;
     // Restore the old handler
-    sigaction(SIGSEGV, &old_sigsegv_handler, nullptr);
-    sigaction(SIGABRT, &old_sigabrt_handler, nullptr);
-    sigaction(SIGFPE, &old_sigfpe_handler, nullptr);
+    std::signal(SIGTERM, SIG_DFL);
+    std::signal(SIGINT, SIG_DFL);
+    std::signal(SIGSEGV, SIG_DFL);
+    std::signal(SIGABRT, SIG_DFL);
+    std::signal(SIGFPE, SIG_DFL);
 }
 
-int Log::overflow(int c) {                                                                                              
-    file.log_c(c);
-    console.log_c(c);
-    return 0;
-}
 
-Log::~Log() {
-    this->restore_signal_handling();
-    std::cerr.rdbuf(original_cerr);
-    // std::cout.rdbuff(original_cout);
-}
