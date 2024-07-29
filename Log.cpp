@@ -54,7 +54,7 @@ std::string stacktrace() {
 void signal_handler(int signal) {
     std::stringstream ss;
     ss <<  "Signal handler: " << strsignal(signal) << ":\n" << stacktrace();
-    signal_logger->log(ss.str());
+    signal_logger->log(ss.str(), Severity::ERROR);
 
     std::exit(signal);
 }
@@ -69,7 +69,7 @@ FileLogger::FileLogger(const std::string output_filename, Severity logging_level
 
 void FileLogger::log(const std::string msg, Severity msg_severity) {
     if(logging_level != OFF && msg_severity >= logging_level)
-        output_file << msg << std::endl;
+        output_file << msg_severity << ": " << msg << std::endl;
 }
 
 
@@ -83,7 +83,7 @@ FileLogger::~FileLogger() {
 }
 void ConsoleLogger::log(const std::string msg, Severity msg_severity)  {
     if(logging_level != OFF && msg_severity >= logging_level)
-        output_stream << msg << std::endl;
+        output_stream << msg_severity << ": " << msg << std::endl;
 }
 
 void ConsoleLogger::set_logging_level(Severity new_logging_level) {
