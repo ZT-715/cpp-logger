@@ -2,7 +2,7 @@
 CXX = g++
 
 # Compiler flags
-CXXFLAGS = -g -Wall
+CXXFLAGS = -g -Og -Wall -Wextra -pedantic
 
 # Linker flags
 LDFLAGS = -lbfd -ldl
