@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const Severity& level);
  */
 class Logger {
 public:
-    virtual void log(std::string msg, Severity msg_severity=DEBUG) = 0;
+    virtual void log(const std::string  msg, Severity msg_severity=DEBUG) = 0;
     virtual void set_logging_level(Severity new_logging_level) = 0;
     virtual ~Logger() {};
 };
@@ -34,18 +34,18 @@ public:
  */
 class FileLogger: public Logger {
 private:
-    Severity logging_level;
     std::string output_filename;
+    Severity logging_level;
     std::ofstream output_file;
 
 public: 
-    FileLogger(std::string output_filename="./log.txt", Severity logging_level=DEBUG):
+    FileLogger(const std::string output_filename="./log.txt", Severity logging_level=DEBUG):
         output_filename(output_filename), logging_level(logging_level) {
         output_file.open(output_filename, std::ios::app);
         if(!output_file)
            throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
     } 
-    void log(std::string msg, Severity msg_severity=DEBUG);
+    void log(const std::string msg, Severity msg_severity=DEBUG);
     void set_logging_level(Severity new_logging_level);     
     ~FileLogger(); 
 };
@@ -56,14 +56,14 @@ public:
  *  Ideally, \p output_stream is cerr which is unbuffered.
  */
 class ConsoleLogger: public Logger {
-    Severity logging_level;
     std::ostream& output_stream;
+    Severity logging_level;
    
 public:
     ConsoleLogger(std::ostream& output=std::cerr, Severity logging_level=DEBUG):
         output_stream(output), logging_level(logging_level) {};
     
-    void log(std::string msg, Severity msg_severity=DEBUG); 
+    void log(const std::string msg, Severity msg_severity=DEBUG); 
 
     void set_logging_level(Severity new_logging_level);
 
@@ -80,8 +80,8 @@ public:
  */
 class Log: public std::ostream {
     private:
-        Logger& file;
         Logger& console;
+        Logger& file;
 
     public:
         Log (Logger& console_logger, Logger& file_logger): 

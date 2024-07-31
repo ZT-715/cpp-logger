@@ -23,28 +23,30 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     }
     return os;
 }
-void FileLogger::log(std::string msg, Severity msg_severity) {
-    if(msg_severity >= logging_level)
+void FileLogger::log(const std::string msg, Severity msg_severity) {
+    if(msg_severity < logging_level)
         return;
     output_file << msg << std::endl;
 }
 
-void FileLogger::set_logging_level(Severity new_logging_level) {
+void FileLogger::set_logging_level(Severity new_logging_level){
     logging_level = new_logging_level;
 }
 
 FileLogger::~FileLogger() {
     output_file.close(); 
 }
-void ConsoleLogger::log(std::string msg, Severity msg_severity)  {
-    if(msg_severity >= logging_level)
+void ConsoleLogger::log(const std::string msg, Severity msg_severity)  {
+    if(msg_severity < logging_level)
         return;
     output_stream << msg << std::endl;
 }
 
 void ConsoleLogger::set_logging_level(Severity new_logging_level) {
     logging_level = new_logging_level;
+
 }
+
 
 
 
