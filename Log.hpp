@@ -13,8 +13,6 @@
  */
 enum Severity {OFF, DEBUG, INFO, WARNING, ERROR};
 
-
-
 /** @brief Converts enum to text on output streams.
  */
 std::ostream& operator<<(std::ostream& os, const Severity& level);
@@ -89,6 +87,16 @@ class Log: public std::ostream {
 
         void set_logging_level(Severity);
 };
+
+class fatal_logged_exception: public std::exception {
+    const std::string msg;
+    const Logger& logger;
+    public:
+        fatal_logged_exception(const std::string msg, Logger& logger);
+        const char* what() const noexcept;
+
+        ~fatal_logged_exception() {};
+};   
 
 #endif
 

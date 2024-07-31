@@ -6,12 +6,12 @@
 
 void test_log(){
     // Constroi um ConsoleLogger default
-    ConsoleLogger log_console;
+    ConsoleLogger log_console{std::cout, DEBUG};
     
     log_console.log("Iniciando ConsoleLogger.");
 
     // Constroi um FileLogger default
-    FileLogger log_file;
+    FileLogger log_file{"./test.txt", DEBUG};
 
     log_file.log("Iniciando FileLogger default.");
 
@@ -19,8 +19,16 @@ void test_log(){
 
     log_ref.set_logging_level(Severity::OFF);
 
-    log_ref.log("Mensagem que não aparece.");
+    log_ref.log("Mensagem que não aparece.", Severity::ERROR);
     log_ref.log("Mensagem que aparece.", Severity::OFF);
+
+    log_ref.set_logging_level(Severity::DEBUG);
+    try{
+        throw fatal_logged_exception("TEST", log_ref);
+    }
+    catch(const fatal_logged_exception& e){
+        std::cout << "catch: " << e.what() << std::endl;
+    }
 
 }
 

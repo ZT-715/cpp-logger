@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     return os;
 }
 void FileLogger::log(const std::string msg, Severity msg_severity) {
-    if(msg_severity <= logging_level)
+    if(logging_level != OFF && msg_severity >= logging_level)
         output_file << msg << std::endl;
 }
 
@@ -36,7 +36,7 @@ FileLogger::~FileLogger() {
     output_file.close(); 
 }
 void ConsoleLogger::log(const std::string msg, Severity msg_severity)  {
-    if(msg_severity <= logging_level)
+    if(logging_level != OFF && msg_severity >= logging_level)
         output_stream << msg << std::endl;
 }
 
@@ -45,6 +45,14 @@ void ConsoleLogger::set_logging_level(Severity new_logging_level) {
 
 }
 
+fatal_logged_exception::fatal_logged_exception(const std::string msg, Logger& logger): msg{"fatal_logged_exception: " + msg}, logger{logger} {
+    logger.log(this->msg, ERROR);
+}
 
+const char* fatal_logged_exception::what() const noexcept {
+    return msg.c_str();
+}
+
+    
 
 
