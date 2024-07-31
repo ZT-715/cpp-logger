@@ -24,9 +24,10 @@ std::ostream& operator<<(std::ostream& os, const Severity& level);
  *  @brief Abstract logger interface.
  */
 class Logger {
+protected:
+    virtual int log_c(char c) = 0;
 public:
     virtual void log(const std::string  msg, Severity msg_severity=DEBUG) = 0;
-    virtual int log_c(char c) = 0;
     virtual void set_logging_level(Severity new_logging_level) = 0;
     virtual ~Logger() {};
 };
@@ -39,7 +40,11 @@ private:
     std::string output_filename;
     Severity logging_level;
     std::ofstream output_file;
-
+protected:
+    int log_c(char c){
+        output_file.put(c);
+        return 0;
+    }
 public: 
     FileLogger(const std::string output_filename="./log.txt", Severity logging_level=DEBUG):
         output_filename(output_filename), logging_level(logging_level) {
@@ -49,10 +54,7 @@ public:
     } 
 
     void log(const std::string msg, Severity msg_severity=DEBUG);
-    int log_c(char c){
-        output_file.put(c);
-        return 0;
-    }
+    
     void set_logging_level(Severity new_logging_level);     
     ~FileLogger(); 
 };
@@ -63,18 +65,20 @@ public:
  *  Ideally, \p output_stream is cerr which is unbuffered.
  */
 class ConsoleLogger: public Logger {
+private:
     std::ostream& output_stream;
     Severity logging_level;
-   
+protected:
+   int log_c(char c){
+        output_stream.put(c);
+        return 0;
+    }
 public:
     ConsoleLogger(std::ostream& output=std::cerr, Severity logging_level=DEBUG):
         output_stream(output), logging_level(logging_level) {};
     
     void log(const std::string msg, Severity msg_severity=DEBUG); 
-    int log_c(char c){
-        output_stream.put(c);
-        return 0;
-    }
+    
 
     void set_logging_level(Severity new_logging_level);
 
@@ -86,7 +90,6 @@ public:
  *
  *  @todo
  *  Implement stream to multiple Loggers
- *  Add __LINE__ and __FILE__ inline
  *  Add time to output
  */
 class Log: public std::ostream,
