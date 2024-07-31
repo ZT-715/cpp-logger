@@ -5,6 +5,9 @@
 #include <fstream>
 #include <string>
 
+#define logged_exception(msg, logger) fatal_logged_exception( std::string(__FILE__) +" - "+ std::to_string(__LINE__)+ ": " + msg, logger)
+
+
 /** @enum Severity
  *  @brief Possible logging levels, DEBUG is default.
  *
@@ -23,6 +26,7 @@ std::ostream& operator<<(std::ostream& os, const Severity& level);
 class Logger {
 public:
     virtual void log(const std::string  msg, Severity msg_severity=DEBUG) = 0;
+    virtual int log_c(char c) = 0;
     virtual void set_logging_level(Severity new_logging_level) = 0;
     virtual ~Logger() {};
 };
@@ -30,7 +34,7 @@ public:
 /** @class FileLogger
  *  @brief Logger that manages file creation and uptdate.
  */
-class FileLogger: public Logger {
+class FileLogger: public Logger{
 private:
     std::string output_filename;
     Severity logging_level;
@@ -43,7 +47,12 @@ public:
         if(!output_file)
            throw std::ios_base::failure("Cannot open file '" + output_filename + "'.");
     } 
+
     void log(const std::string msg, Severity msg_severity=DEBUG);
+    int log_c(char c){
+        output_file.put(c);
+        return 0;
+    }
     void set_logging_level(Severity new_logging_level);     
     ~FileLogger(); 
 };
@@ -62,6 +71,10 @@ public:
         output_stream(output), logging_level(logging_level) {};
     
     void log(const std::string msg, Severity msg_severity=DEBUG); 
+    int log_c(char c){
+        output_stream.put(c);
+        return 0;
+    }
 
     void set_logging_level(Severity new_logging_level);
 
@@ -76,14 +89,21 @@ public:
  *  Add __LINE__ and __FILE__ inline
  *  Add time to output
  */
-class Log: public std::ostream {
+class Log: public std::ostream,
+           private std::streambuf  {
     private:
         Logger& console;
         Logger& file;
 
     public:
         Log (Logger& console_logger, Logger& file_logger): 
-            console(console_logger), file(file_logger) {} 
+            std::ostream(this), console(console_logger), file(file_logger) {} 
+
+        int overflow(int c) override {
+            console.log_c(c);
+            file.log_c(c);
+            return 0;
+        }
 
         void set_logging_level(Severity);
 };
