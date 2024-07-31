@@ -23,6 +23,36 @@ std::ostream& operator<<(std::ostream& os, const Severity& level) {
     }
     return os;
 }
+
+void stacktrace() {
+    backward::StackTrace st;
+    backward::Printer p;
+
+    p.object = true;
+    p.color_mode = backward::ColorMode::always;
+    p.address = true;
+    p.snippet = true;
+
+    std::cerr << "Stack trace: \n";
+
+    // Todo:
+    // load_here() includes itself on the trace,
+    // must be removed
+
+    st.load_here(32);
+    backward::TraceResolver tr;
+    tr.load_stacktrace(st);
+    p.print(st, std::cerr);
+}
+
+void signal_handler(int signal) {
+    std::cerr << "Signal handler: " << strsignal(signal) << ":\n";
+
+    stacktrace();
+
+    std::exit(signal);
+}
+
 void FileLogger::log(const std::string msg, Severity msg_severity) {
     if(logging_level != OFF && msg_severity >= logging_level)
         output_file << msg << std::endl;
@@ -53,6 +83,23 @@ const char* fatal_logged_exception::what() const noexcept {
     return msg.c_str();
 }
 
+Log::Log(Logger& console_logger, Logger& file_logger):
+    std::ostream(this), console(console_logger),
+    file(file_logger) {
+        setup_signal_handling();
+        // original_cout = std::cout.rdbuf(this);
+        original_cerr = std::cerr.rdbuf(this);
+}
+
+void Log::log(const std::string msg, Severity logging_level) {
+    console.log(msg, logging_level);
+    file.log(msg, logging_level);
     
+    return;
+}
 
-
+Log::~Log() {
+    this->restore_signal_handling();
+//    std::cerr.rdbuf(original_cerr);
+    // std::cout.rdbuff(original_cout);
+}

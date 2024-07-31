@@ -4,6 +4,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <csignal>
+
+#define BACKWARD_HAS_BFD 1
+#include "backward-cpp/backward.hpp"
 
 #define logged_exception(msg, logger) fatal_logged_exception( std::string(__FILE__) +" - "+ std::to_string(__LINE__)+ ": " + msg, logger)
 
@@ -20,15 +24,17 @@ enum Severity {OFF, DEBUG, INFO, WARNING, ERROR};
  */
 std::ostream& operator<<(std::ostream& os, const Severity& level);
 
+extern void stacktrace();
+extern void signal_handler(int);
+
 /** @class Logger
  *  @brief Abstract logger interface.
  */
 class Logger {
-protected:
-    virtual int log_c(char c) = 0;
 public:
     virtual void log(const std::string  msg, Severity msg_severity=DEBUG) = 0;
     virtual void set_logging_level(Severity new_logging_level) = 0;
+    virtual int log_c(char c) = 0;
     virtual ~Logger() {};
 };
 
@@ -97,18 +103,49 @@ class Log: public std::ostream,
     private:
         Logger& console;
         Logger& file;
+        std::streambuf* original_cout;
+        std::streambuf* original_cerr;
+        struct sigaction old_sigsegv_handler;
+        struct sigaction old_sigabrt_handler;
+        struct sigaction old_sigfpe_handler;
 
-    public:
-        Log (Logger& console_logger, Logger& file_logger): 
-            std::ostream(this), console(console_logger), file(file_logger) {} 
 
-        int overflow(int c) override {
-            console.log_c(c);
-            file.log_c(c);
-            return 0;
+    protected:
+
+        void setup_signal_handling() {
+            struct sigaction sa;
+            sa.sa_handler = signal_handler;
+            sigemptyset(&sa.sa_mask);
+            sa.sa_flags = 0;
+
+            // Save the old handlers and set the new ones
+            sigaction(SIGSEGV, &sa, &old_sigsegv_handler);
+            sigaction(SIGABRT, &sa, &old_sigabrt_handler);
+            sigaction(SIGFPE, &sa, &old_sigfpe_handler);
         }
 
+        void restore_signal_handling() {
+            // Restore the old handlers
+            sigaction(SIGSEGV, &old_sigsegv_handler, nullptr);
+            sigaction(SIGABRT, &old_sigabrt_handler, nullptr);
+            sigaction(SIGFPE, &old_sigfpe_handler, nullptr);
+        }
+
+         int overflow(int c) override {
+                //file.log_c(c);
+                console.log_c(c);
+                return 0;
+            }
+
+    public:
+        Log (Logger& console_logger, Logger& file_logger);       
+        void log(const std::string msg, Severity logging_level=DEBUG); 
+
+
         void set_logging_level(Severity);
+
+        ~Log();
+
 };
 
 class fatal_logged_exception: public std::exception {

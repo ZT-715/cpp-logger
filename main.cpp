@@ -32,9 +32,12 @@ void test_log(){
 
     Log log{log_console, log_file};    
     log << "ostream" << std::endl;
+    
+    stacktrace();
+    return;
 }
 
-void test_backward(std::ostream& out){
+void test_backward(){
     backward::StackTrace st; // initialize stack trace
     backward::Printer p;
 
@@ -51,13 +54,13 @@ void test_backward(std::ostream& out){
         int b = --a;
         int result = a + b; // This will cause a division by zero error
                             // which is caught by a sig handler
-        out << "Result: " << result << std::endl;
+        std::cerr << "Result: " << result << std::endl;
         
         throw std::invalid_argument("TEST backtrace"); // this is handled 
                                                        // by the catch
 
     } catch (std::exception& e) {
-        out << "Exception caught: " << e.what() << std::endl;
+        std::cerr << "Exception caught: " << e.what() << std::endl;
          
         st.load_here(32); // capture stack trace
                           // Problem: load_here() includes itself
@@ -69,15 +72,15 @@ void test_backward(std::ostream& out){
         backward::TraceResolver tr;
         tr.load_stacktrace(st);
     
-        out << "st: ";
-        p.print(st,out); // print stack trace
+        std::cerr << "st: ";
+        p.print(st,std::cerr); // print stack trace
     }
 }
 
 
 int main(void) {
     
-//    test_log();
+    test_log();
 
         // Constroi um ConsoleLogger default
     ConsoleLogger log_console{std::cout, DEBUG};
@@ -85,7 +88,7 @@ int main(void) {
     log_console.log("Iniciando ConsoleLogger.");
 
     // Constroi um FileLogger default
-    FileLogger log_file{"./test.txt", DEBUG};
+    FileLogger log_file{"./testII.txt", DEBUG};
 
     log_file.log("Iniciando FileLogger default.");
 
@@ -93,8 +96,13 @@ int main(void) {
     Log log{log_console, log_file};    
     log << "ostream" << std::endl;
 
-    test_backward(log);
+   // stacktrace();
 
+    //log.setup_signal_handling();
+
+    test_backward();
+
+    std::cerr << "FI\n";
     return 1;
 
 }
