@@ -5,12 +5,10 @@
 #include"Log.hpp"
 
 void test_log(){
-    // Constroi um ConsoleLogger default
     ConsoleLogger log_console{std::cout, DEBUG};
     
     log_console.log("Iniciando ConsoleLogger.");
 
-    // Constroi um FileLogger default
     FileLogger log_file{"./test.txt", DEBUG};
 
     log_file.log("Iniciando FileLogger default.");
@@ -48,9 +46,6 @@ void test_backward(){
     st.load_here(32); // capture stack trace
                       // Problem: load_here() includes itself
                       // and the catch handle.
-                      //
-                      // Must use macro to generate trace on 
-                      // throw statement.
 
     backward::TraceResolver tr;
     tr.load_stacktrace(st);
@@ -60,21 +55,21 @@ void test_backward(){
 }
 
 
-int main(void) {
+int main(int argc, char* argv[]) {
     
     test_log();
 
-        // Constroi um ConsoleLogger default
     ConsoleLogger log_console{std::cout, DEBUG};
-    
     log_console.log("Iniciando ConsoleLogger.");
-
-    // Constroi um FileLogger default
-    FileLogger log_file{"./testII.txt", DEBUG};
-
+    FileLogger log_file{"./test_singal.txt", DEBUG};
     log_file.log("Iniciando FileLogger default.");
-
-    setup_signal_handling(log_file);
+ 
+    if (argc == 2) {
+                setup_signal_handling(log_console);
+    }
+    else {
+       setup_signal_handling(log_file);
+    }
 
     // Simulate a core dump (division by zero)
     volatile int a = 1;
