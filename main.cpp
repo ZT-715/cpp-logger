@@ -1,5 +1,5 @@
 #include <iostream>
-#define BACKWARD_HAS_BFD 1
+#define BACKWARD_HAS_DWARF 1
 #include "backward-cpp/backward.hpp"
 
 #include"Log.hpp"

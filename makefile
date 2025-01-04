@@ -1,24 +1,18 @@
 # Compiler
 CXX = g++
-
+ 
 # Compiler flags
-CXXFLAGS = -g -Og -Wall -Wextra -pedantic
+CXXFLAGS = -g -Og -Wall -Wextra -pedantic -std=c++11
 
 # Linker flags
-LDFLAGS = -lbfd -ldl
+LDFLAGS = -ldwarf -lelf -ldl 
 
 # Source files
 SRCS = main.cpp Log.cpp ./backward-cpp/backward.cpp
 
-# Output executable
-TARGET = main
-
-# Default target
-all: $(TARGET)
-
 # Build the target
-$(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) $(SRCS) $(LDFLAGS) -o $(TARGET)
+build: 
+	$(CXX) $(CXXFLAGS) $(SRCS) $(LDFLAGS) -o main.o
 
 # Clean the build files
 clean:
