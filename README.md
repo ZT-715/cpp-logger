@@ -18,6 +18,24 @@ This project implements a **C++ logging library** designed to handle exceptions,
 5. **Signal Handling**:
    - Custom `signal_handler` captures unexpected program signals (e.g., segmentation faults) and logs details along with the stack trace.
 
+#### How to Run
+
+To run successfully, the libdwarf and libelf libraries are needed, be sure to have them installed and on the path CPLUS_INCLUDE_PATH and LIBRARY_PATH.
+
+```
+git clone https://github.com/ZT-715/cpp-logger
+
+cd cpp-logger/
+
+git submodule init
+
+git submodule update
+
+make build
+
+./main.o
+```
+
 #### Next Steps
 Potential improvements include:
 - Resolving memory allocation issues in signal handling.
